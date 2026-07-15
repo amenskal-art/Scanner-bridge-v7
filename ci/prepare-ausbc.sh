@@ -26,8 +26,8 @@ for MF in libausbc libuvc libnative libuvccommon; do
   sed -i 's/ *package="[^"]*"//' "$MF/src/main/AndroidManifest.xml"
 done
 
-echo ">> Removing conflicting requireArguments() from DialogFragmentEx..."
-sed -i '/protected Bundle requireArguments()/,/^    }/d' libuvccommon/src/main/java/com/jiangdg/dialog/DialogFragmentEx.java
+echo ">> Fixing conflicting requireArguments() in DialogFragmentEx..."
+sed -i 's/protected Bundle requireArguments()/protected Bundle requireArgumentsLegacy()/' libuvccommon/src/main/java/com/jiangdg/dialog/DialogFragmentEx.java
 
 echo ">> Writing AGP 8 compatible build files..."
 
