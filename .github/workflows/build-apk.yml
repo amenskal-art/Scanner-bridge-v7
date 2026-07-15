@@ -1,0 +1,57 @@
+name: Build APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Locate project
+        id: locate
+        run: |
+          SETTINGS=$(find . -maxdepth 3 -name settings.gradle -not -path './.git/*' | head -n1)
+          if [ -z "$SETTINGS" ]; then
+            echo "ERROR: settings.gradle not found anywhere. The project files did not upload."
+            exit 1
+          fi
+          DIR=$(dirname "$SETTINGS")
+          echo "Project found in: $DIR"
+          if [ ! -f "$DIR/app/build.gradle" ]; then
+            echo "ERROR: $DIR/app/build.gradle is missing. The app folder did not upload completely."
+            exit 1
+          fi
+          if [ ! -f "$DIR/ci/prepare-ausbc.sh" ]; then
+            echo "ERROR: $DIR/ci/prepare-ausbc.sh is missing. Upload the ci folder."
+            exit 1
+          fi
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare AUSBC library modules
+        working-directory: ${{ steps.locate.outputs.dir }}
+        run: bash ci/prepare-ausbc.sh
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Build debug APK
+        working-directory: ${{ steps.locate.outputs.dir }}
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: UVC-Cam-Pro-debug-apk
+          path: ${{ steps.locate.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk
