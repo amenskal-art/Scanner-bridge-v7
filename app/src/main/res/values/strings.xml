@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UVC Cam Pro</string>
+
+    <string name="status_waiting">Waiting for camera — plug in your USB-C webcam</string>
+    <string name="status_connected">Connected · %1$s</string>
+    <string name="status_error">Camera error: %1$s</string>
+    <string name="generic_camera">UVC camera</string>
+
+    <string name="section_exposure">EXPOSURE</string>
+    <string name="section_wb">WHITE BALANCE</string>
+    <string name="section_image">IMAGE</string>
+    <string name="section_zoom">ZOOM</string>
+
+    <string name="auto_exposure">Auto exposure</string>
+    <string name="auto_wb">Auto white balance</string>
+
+    <string name="label_exposure">Exposure</string>
+    <string name="label_temperature">Temperature</string>
+    <string name="label_brightness">Brightness</string>
+    <string name="label_contrast">Contrast</string>
+    <string name="label_saturation">Saturation</string>
+    <string name="label_sharpness">Sharpness</string>
+    <string name="label_zoom">Zoom</string>
+
+    <string name="safe_apply">Safe apply</string>
+    <string name="safe_apply_hint">Turn on if the picture freezes when you adjust a control. Pauses the stream for a moment while each setting is written to the camera.</string>
+    <string name="reset_all">Reset all controls</string>
+</resources>
