@@ -35,6 +35,17 @@ sed -i 's/mMediaMetadataRetriever.release();/try { mMediaMetadataRetriever.relea
 echo ">> Fixing unhandled IOException in MediaMoviePlayer..."
 sed -i 's/mMetadata.release();/try { mMetadata.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaMoviePlayer.java
 
+echo ">> Fixing Kotlin nullability mismatches for Android SDK 34..."
+sed -i 's/SurfaceTexture?/SurfaceTexture/g' libausbc/src/main/java/com/jiangdg/ausbc/base/CameraActivity.kt libausbc/src/main/java/com/jiangdg/ausbc/base/CameraFragment.kt
+sed -i 's/SurfaceHolder?/SurfaceHolder/g' libausbc/src/main/java/com/jiangdg/ausbc/base/CameraActivity.kt libausbc/src/main/java/com/jiangdg/ausbc/base/CameraFragment.kt
+sed -i 's/Canvas?/Canvas/g' libausbc/src/main/java/com/jiangdg/ausbc/widget/PreviewImageView.kt
+sed -i 's/Animator?/Animator/g' libausbc/src/main/java/com/jiangdg/ausbc/widget/PreviewImageView.kt libausbc/src/main/java/com/jiangdg/ausbc/widget/TipView.kt
+
+echo ">> Disabling non-transitive R classes to fix unresolved IDs..."
+if ! grep -q "android.nonTransitiveRClass=false" gradle.properties; then
+    echo "android.nonTransitiveRClass=false" >> gradle.properties
+fi
+
 echo ">> Writing AGP 8 compatible build files..."
 
 cat > libausbc/build.gradle << 'EOF'
