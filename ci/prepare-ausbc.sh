@@ -32,6 +32,9 @@ sed -i 's/protected Bundle requireArguments()/protected Bundle requireArgumentsL
 echo ">> Fixing unhandled IOException in MediaDecoder..."
 sed -i 's/mMediaMetadataRetriever.release();/try { mMediaMetadataRetriever.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaDecoder.java
 
+echo ">> Fixing unhandled IOException in MediaMoviePlayer..."
+sed -i 's/mMetadata.release();/try { mMetadata.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaMoviePlayer.java
+
 echo ">> Writing AGP 8 compatible build files..."
 
 cat > libausbc/build.gradle << 'EOF'
