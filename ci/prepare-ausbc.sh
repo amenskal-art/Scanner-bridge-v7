@@ -29,6 +29,9 @@ done
 echo ">> Fixing conflicting requireArguments() in DialogFragmentEx..."
 sed -i 's/protected Bundle requireArguments()/protected Bundle requireArgumentsLegacy()/' libuvccommon/src/main/java/com/jiangdg/dialog/DialogFragmentEx.java
 
+echo ">> Fixing unhandled IOException in MediaDecoder..."
+sed -i 's/mMediaMetadataRetriever.release();/try { mMediaMetadataRetriever.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaDecoder.java
+
 echo ">> Writing AGP 8 compatible build files..."
 
 cat > libausbc/build.gradle << 'EOF'
