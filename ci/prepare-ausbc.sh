@@ -84,7 +84,10 @@ plugins {
 
 android {
     namespace 'com.jiangdg.ausbc'
-    compileSdk 34
+    // SDK 31 stubs: framework callbacks (SurfaceTextureListener etc.) are not
+    // yet annotated @NonNull there, so this module's era-typical nullable
+    // overrides still compile. Bytecode runs fine inside a compileSdk-34 app.
+    compileSdk 31
 
     defaultConfig {
         minSdk 19
@@ -103,9 +106,11 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.12.0'
+    // Era-matched androidx versions (what this code was written against).
+    // The app resolves newer versions at runtime; androidx keeps binary compat.
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.android.material:material:1.3.0'
     api 'com.elvishew:xlog:1.11.0'
 
     implementation project(':libuvc')
