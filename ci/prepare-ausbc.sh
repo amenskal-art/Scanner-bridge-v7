@@ -74,6 +74,20 @@ else
   exit 1
 fi
 
+# SDK 31+ stubs annotate TextureView.SurfaceTextureListener and
+# SurfaceHolder.Callback parameters @NonNull. Align the era-typical nullable
+# overrides so they still count as overrides.
+for F in libausbc/src/main/java/com/jiangdg/ausbc/base/CameraActivity.kt \
+         libausbc/src/main/java/com/jiangdg/ausbc/base/CameraFragment.kt; do
+  if grep -q "surface: SurfaceTexture?" "$F"; then
+    sed -i 's/surface: SurfaceTexture?/surface: SurfaceTexture/g; s/holder: SurfaceHolder?/holder: SurfaceHolder/g' "$F"
+    echo "   patched: $(basename "$F") listener nullability (SDK 31+)"
+  else
+    echo "   ERROR: expected nullable listener params in $F not found (source drift?)"
+    exit 1
+  fi
+done
+
 echo ">> Writing AGP 8 compatible build files..."
 
 cat > libausbc/build.gradle << 'EOF'
