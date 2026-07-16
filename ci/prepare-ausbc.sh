@@ -40,6 +40,40 @@ else
   exit 1
 fi
 
+# USBMonitor registers a receiver whose filter includes a custom action
+# (ACTION_USB_PERMISSION). On Android 13+ with targetSdk 33+, that throws
+# SecurityException unless RECEIVER_EXPORTED / NOT_EXPORTED is specified.
+USBM="libuvc/src/main/java/com/jiangdg/usb/USBMonitor.java"
+OLD_CALL='context.registerReceiver(mUsbReceiver, filter);'
+NEW_CALL='if (android.os.Build.VERSION.SDK_INT >= 33) { context.registerReceiver(mUsbReceiver, filter, android.content.Context.RECEIVER_EXPORTED); } else { context.registerReceiver(mUsbReceiver, filter); }'
+if grep -q "$OLD_CALL" "$USBM"; then
+  sed -i "s|$OLD_CALL|$NEW_CALL|" "$USBM"
+  echo "   patched: USBMonitor.registerReceiver for Android 13+ (targetSdk 34)"
+else
+  echo "   ERROR: expected registerReceiver call in USBMonitor.java not found (source drift?)"
+  exit 1
+fi
+
+# API 34 changed MediaMetadataRetriever.release() to declare 'throws IOException',
+# which breaks old code calling it bare. Wrap both call sites in try/catch.
+MD="libuvccommon/src/main/java/com/jiangdg/media/MediaDecoder.java"
+if grep -q "mMediaMetadataRetriever.release();" "$MD"; then
+  sed -i 's|mMediaMetadataRetriever.release();|try { mMediaMetadataRetriever.release(); } catch (final Exception e) { /* API 34: throws IOException */ }|' "$MD"
+  echo "   patched: MediaDecoder retriever release (API 34 IOException)"
+else
+  echo "   ERROR: expected retriever release in MediaDecoder.java not found (source drift?)"
+  exit 1
+fi
+
+MP="libuvccommon/src/main/java/com/jiangdg/media/MediaMoviePlayer.java"
+if grep -q "mMetadata.release();" "$MP"; then
+  sed -i 's|mMetadata.release();|try { mMetadata.release(); } catch (final Exception e) { /* API 34: throws IOException */ }|' "$MP"
+  echo "   patched: MediaMoviePlayer retriever release (API 34 IOException)"
+else
+  echo "   ERROR: expected retriever release in MediaMoviePlayer.java not found (source drift?)"
+  exit 1
+fi
+
 echo ">> Writing AGP 8 compatible build files..."
 
 cat > libausbc/build.gradle << 'EOF'
