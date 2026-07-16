@@ -26,24 +26,18 @@ for MF in libausbc libuvc libnative libuvccommon; do
   sed -i 's/ *package="[^"]*"//' "$MF/src/main/AndroidManifest.xml"
 done
 
-echo ">> Fixing conflicting requireArguments() in DialogFragmentEx..."
-sed -i 's/protected Bundle requireArguments()/protected Bundle requireArgumentsLegacy()/' libuvccommon/src/main/java/com/jiangdg/dialog/DialogFragmentEx.java
 
-echo ">> Fixing unhandled IOException in MediaDecoder..."
-sed -i 's/mMediaMetadataRetriever.release();/try { mMediaMetadataRetriever.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaDecoder.java
-
-echo ">> Fixing unhandled IOException in MediaMoviePlayer..."
-sed -i 's/mMetadata.release();/try { mMetadata.release(); } catch (Exception e) { e.printStackTrace(); }/g' libuvccommon/src/main/java/com/jiangdg/media/MediaMoviePlayer.java
-
-echo ">> Fixing Kotlin nullability mismatches for Android SDK 34..."
-sed -i 's/SurfaceTexture?/SurfaceTexture/g' libausbc/src/main/java/com/jiangdg/ausbc/base/CameraActivity.kt libausbc/src/main/java/com/jiangdg/ausbc/base/CameraFragment.kt
-sed -i 's/SurfaceHolder?/SurfaceHolder/g' libausbc/src/main/java/com/jiangdg/ausbc/base/CameraActivity.kt libausbc/src/main/java/com/jiangdg/ausbc/base/CameraFragment.kt
-sed -i 's/Canvas?/Canvas/g' libausbc/src/main/java/com/jiangdg/ausbc/widget/PreviewImageView.kt
-sed -i 's/Animator?/Animator/g' libausbc/src/main/java/com/jiangdg/ausbc/widget/PreviewImageView.kt libausbc/src/main/java/com/jiangdg/ausbc/widget/TipView.kt
-
-echo ">> Disabling non-transitive R classes to fix unresolved IDs..."
-if ! grep -q "android.nonTransitiveRClass=false" gradle.properties; then
-    echo "android.nonTransitiveRClass=false" >> gradle.properties
+echo ">> Patching legacy sources for modern androidx..."
+# DialogFragmentEx defines requireArguments(), which is now a FINAL method on
+# androidx Fragment (added in fragment 1.1.0 with identical semantics).
+# Rename it so it no longer clashes; callers resolve to the framework method.
+DFE="libuvccommon/src/main/java/com/jiangdg/dialog/DialogFragmentEx.java"
+if grep -q "protected Bundle requireArguments()" "$DFE"; then
+  sed -i 's/protected Bundle requireArguments()/protected Bundle requireArgumentsLegacy()/' "$DFE"
+  echo "   patched: DialogFragmentEx.requireArguments -> requireArgumentsLegacy"
+else
+  echo "   ERROR: expected requireArguments() in DialogFragmentEx.java not found (source drift?)"
+  exit 1
 fi
 
 echo ">> Writing AGP 8 compatible build files..."
@@ -69,6 +63,8 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
+        languageVersion = '1.6'
+        apiVersion = '1.6'
     }
 }
 
@@ -143,6 +139,8 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
+        languageVersion = '1.6'
+        apiVersion = '1.6'
     }
 }
 
